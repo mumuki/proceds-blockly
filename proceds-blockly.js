@@ -248,11 +248,41 @@ window.initProcedsBlockly = function(customStatementType, initialize = () => {})
     returnMsg = Blockly.Msg.PROCEDURES_DEFRETURN_RETURN
   ) {
     return function() {
+      var self = this;
+
+      if ((this.workspace.options.comments ||
+            (this.workspace.options.parentWorkspace &&
+            this.workspace.options.parentWorkspace.options.comments)) &&
+          comment) {
+        this.setCommentText(comment);
+      }
+      this.setCommentText(null);
+      this.setColour((
+        Blockly.CUSTOM_COLORS && (
+          Blockly.CUSTOM_COLORS[this.type] ||
+          Blockly.CUSTOM_COLORS[withReturn ? "function" : "procedure"]
+        )) || Blockly.Blocks.procedures.HUE);
+      this.setTooltip(tooltip);
+      this.setHelpUrl(helpUrl);
+      this.arguments_ = [];
+      this.statementConnection_ = null;      
+
       var defaultLegalName = Blockly.Procedures.findLegalName(defaultName, this);
       var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
       nameField.setSpellcheck(false);
 
-      var self = this;
+      if (Blockly.currentDisplayMode && !Blockly.currentDisplayMode().showText) {
+        nameField.setVisible(false);
+        const imageField = new Blockly.FieldImage(
+          Blockly.currentDisplayMode().procedureDefIcon,
+          Blockly.currentDisplayMode().iconSize,
+          Blockly.currentDisplayMode().iconSize
+        );
+        this.appendDummyInput().appendField(nameField, 'NAME').appendField(imageField);
+        this.setStatements_(withStatements);
+
+        return;
+      }
 
       // [!]
       var addParameterButton = new Blockly.FieldImage(
@@ -279,24 +309,7 @@ window.initProcedsBlockly = function(customStatementType, initialize = () => {})
       // if (withParametersMutator)
       //   this.setMutator(new Blockly.Mutator(['procedures_mutatorarg']));
 
-      if ((this.workspace.options.comments ||
-           (this.workspace.options.parentWorkspace &&
-            this.workspace.options.parentWorkspace.options.comments)) &&
-          comment) {
-        this.setCommentText(comment);
-      }
-      this.setCommentText(null);
-      this.setColour((
-        Blockly.CUSTOM_COLORS && (
-          Blockly.CUSTOM_COLORS[this.type] ||
-          Blockly.CUSTOM_COLORS[withReturn ? "function" : "procedure"]
-        )) || Blockly.Blocks.procedures.HUE);
-      this.setTooltip(tooltip);
-      this.setHelpUrl(helpUrl);
-      this.arguments_ = [];
       this.setStatements_(withStatements);
-      this.statementConnection_ = null;
-
       // if (!withParametersMutator) this.updateParams_();
 
       // [!] adding create call button
